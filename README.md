@@ -1,0 +1,2 @@
+# FastAPIInventoryPipeline
+testing some apis
