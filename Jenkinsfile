@@ -4,7 +4,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 // Checkout the code from Git
-                git 'https://github.com/yourusername/fastapi_inventory.git' // Update with your repo URL
+                git 'https://github.com/VaibhavBhawsar/FastAPIInventoryPipeline.git' // Update with your repo URL
             }
         }
         stage('Install Dependencies') {
