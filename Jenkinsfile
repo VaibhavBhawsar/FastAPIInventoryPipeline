@@ -2,12 +2,12 @@ pipeline {
     agent any
 
     stages {
-        // stage('Checkout') {
-        //     steps {
-        //         // Clone the repository
-        //         git 'https://github.com/VaibhavBhawsar/FastAPIInventoryPipeline.git'
-        //     }
-        // }
+         stage('Checkout') {
+             steps {
+                 // Clone the repository
+                 git 'https://github.com/VaibhavBhawsar/FastAPIInventoryPipeline.git'
+             }
+         }
 
         stage('Set Up Environment') {
             steps {
