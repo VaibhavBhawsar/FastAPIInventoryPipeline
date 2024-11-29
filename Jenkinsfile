@@ -1,43 +1,66 @@
 pipeline {
     agent any
+
     stages {
         stage('Checkout') {
             steps {
-                // Checkout the code from Git
-                git 'https://github.com/VaibhavBhawsar/FastAPIInventoryPipeline.git' // Update with your repo URL
+                // Clone the repository
+                git 'https://github.com/VaibhavBhawsar/FastAPIInventoryPipeline.git'
             }
         }
+
+        stage('Set Up Environment') {
+            steps {
+                script {
+                    // Create a virtual environment
+                    sh 'python3 -m venv venv'
+                }
+            }
+        }
+
         stage('Install Dependencies') {
             steps {
-                // Install dependencies
-                sh 'pip install -r requirements.txt'
+                script {
+                    // Activate the virtual environment and install requirements
+                    sh '''
+                    source venv/bin/activate
+                    pip install --upgrade pip
+                    pip install -r requirements.txt
+                    '''
+                }
             }
         }
-        stage('Test') {
+
+        stage('Run Tests') {
             steps {
-                // Run tests (add your test commands here)
-                echo 'No tests defined yet.' // Update with your test command if you add tests
+                script {
+                    // Run your tests here if applicable
+                    // Uncomment the line below to run tests with pytest if you have tests
+                    // sh 'source venv/bin/activate && pytest'
+                    echo 'No tests to run in this setup. Customize as needed.'
+                }
             }
         }
-        stage('Build') {
+
+        stage('Run FastAPI Application') {
             steps {
-                // Build the application (if applicable, e.g., Docker image)
-                echo 'Building the application...'
-            }
-        }
-        stage('Deploy') {
-            steps {
-                // Deploy the application
-                echo 'Deploying the application...'
+                script {
+                    // Start the FastAPI application
+                    sh '''
+                    source venv/bin/activate
+                    nohup uvicorn main:app --host 0.0.0.0 --port 8000 &
+                    '''
+                    echo 'FastAPI application started.'
+                }
             }
         }
     }
+
     post {
-        success {
-            echo 'Pipeline completed successfully!'
-        }
-        failure {
-            echo 'Pipeline failed.'
+        always {
+            // Clean up and deactivate the virtual environment if necessary
+            echo 'Cleaning up...'
+            sh 'deactivate || true'  // Use || true to avoid errors if not activated
         }
     }
 }
