@@ -1,17 +1,30 @@
-provider "docker" {}
-
-# Pull the NGINX Docker image
-resource "docker_image" "nginx" {
-  name         = "nginx:latest"
-  keep_locally = false
+terraform {
+  required_providers {
+    docker = {
+      source  = "kreuzwerker/docker"
+      version = "~> 2.25.0"
+    }
+  }
 }
 
-# Create a Docker container
-resource "docker_container" "nginx_container" {
-  name  = var.container_name
-  image = docker_image.nginx.latest
+provider "docker" {}
+
+# Build Docker Image
+resource "docker_image" "fastapi_image" {
+  name = "fastapi_app:latest"
+
+  build {
+    context    = "$${home/vaibhav/Downloads/Practice/FastAPIInventoryPipeline}/.."  # Adjust based on Dockerfile location
+    dockerfile = "dockerfile"
+  }
+}
+
+# Create Docker Container
+resource "docker_container" "fastapi_container" {
+  name  = "fastapi_container"
+  image = docker_image.fastapi_image.name
   ports {
-    internal = 80
-    external = var.host_port
+    internal = 8000
+    external = 8080
   }
 }
