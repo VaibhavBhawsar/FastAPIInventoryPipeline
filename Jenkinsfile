@@ -2,64 +2,68 @@ pipeline {
     agent any
 
     environment {
-        VENV_DIR = 'venv'
-        TERRAFORM_DIR = 'terraform'
+        APP_NAME = 'FastAPIInventoryPipeline'
+        REPO_URL = 'https://github.com/VaibhavBhawsar/FastAPIInventoryPipeline.git'
+        BUILD_DIR = 'build'
     }
 
     stages {
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
-                git 'https://github.com/VaibhavBhawsar/FastAPIInventoryPipeline.git'
+                echo 'Cloning the GitHub repository...'
+                git branch: 'main', url: "${REPO_URL}"
             }
         }
-
-        stage('Set Up Python Environment') {
+        stage('Setup') {
             steps {
+                echo 'Setting up the pipeline environment...'
+                echo "Application Name: ${APP_NAME}"
+            }
+        }
+        stage('Development') {
+            steps {
+                echo 'I am in development'
+                sh 'echo "Simulating code development..." > development.log'
+            }
+        }
+        stage('Build') {
+            steps {
+                echo 'Building the application...'
                 sh '''
-                python3 -m venv ${VENV_DIR}
-                source ${VENV_DIR}/bin/activate
+                    mkdir -p ${BUILD_DIR}
+                    echo "Simulating application build..." > ${BUILD_DIR}/build.log
                 '''
             }
         }
-
-        stage('Terraform Init') {
+        stage('Testing') {
             steps {
-                dir("${TERRAFORM_DIR}") {
-                    sh 'terraform init'
-                }
+                echo 'Running tests...'
+                sh 'echo "Simulating test execution..." > test_results.log'
             }
         }
-
-        stage('Terraform Plan') {
+        stage('Approval') {
             steps {
-                dir("${TERRAFORM_DIR}") {
-                    sh 'terraform plan -out=tfplan'
-                }
+                input message: 'Approve Deployment?', ok: 'Deploy Now'
             }
         }
-
-        stage('Terraform Apply') {
+        stage('Deployment') {
             steps {
-                dir("${TERRAFORM_DIR}") {
-                    sh 'terraform apply -auto-approve tfplan'
-                }
-            }
-        }
-
-        stage('Run FastAPI Application') {
-            steps {
-                sh '''
-                source ${VENV_DIR}/bin/activate
-                nohup uvicorn main:app --host 0.0.0.0 --port 8000 &
-                '''
+                echo 'Deploying the application...'
+                sh 'echo "Simulating deployment process..." > deployment.log'
             }
         }
     }
 
     post {
         always {
-            echo 'Cleaning up...'
-            sh 'deactivate || true'
+            echo 'Cleaning up temporary files...'
+            sh 'rm -rf ${BUILD_DIR} development.log test_results.log deployment.log'
+        }
+        success {
+            echo 'Pipeline executed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed. Please check the logs.'
         }
     }
 }
