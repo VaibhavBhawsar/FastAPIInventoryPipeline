@@ -106,13 +106,13 @@ pipeline {
             echo 'Pipeline executed successfully!'
             emailext subject: "Pipeline Success: ${APP_NAME}", 
                      body: "The pipeline for ${APP_NAME} executed successfully. Check Jenkins for details.", 
-                     to: 'team@example.com'
+                     to: 'bhavsarvaibhav001@gmail.com'
         }
         failure {
             echo 'Pipeline failed. Please check the logs.'
             emailext subject: "Pipeline Failure: ${APP_NAME}", 
                      body: "The pipeline for ${APP_NAME} failed. Please check the logs on Jenkins for details.", 
-                     to: 'team@example.com'
+                     to: 'bhavsarvaibhav001@gmail.com'
         }
     }
 }
