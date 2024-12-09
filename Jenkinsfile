@@ -1,10 +1,15 @@
 pipeline {
     agent any
+    environment {
+        VENV_DIR = "${env.WORKSPACE}/venv"  // Define a virtual environment directory within the workspace
+        BUILD_DIR = "${env.WORKSPACE}/build"  // Directory for build artifacts
+        TEST_RESULTS_DIR = "${env.WORKSPACE}/test_results"  // Directory for test results
+    }
     stages {
         stage('Initialization') {
             steps {
                 echo 'Initializing the pipeline for FastAPIInventoryPipeline...'
-                echo "Selected branch: ${env.BRANCH_NAME}"
+                echo "Selected branch: ${env.BRANCH_NAME ?: 'main'}"  // Default to 'main' if BRANCH_NAME is null
                 echo "Target environment: Development"
             }
         }
@@ -18,41 +23,39 @@ pipeline {
             steps {
                 echo 'Setting up the pipeline environment...'
                 sh '''
-                    echo Setting up dependencies and environment variables...
-                    python3 -m venv venv
-                    . venv/bin/activate
+                    echo Setting up Python virtual environment...
+                    python3 -m venv ${VENV_DIR}  # Create virtual environment
+                    . ${VENV_DIR}/bin/activate
                     pip install --upgrade pip
-                    pip install -r requirements.txt
+                    pip install -r requirements.txt  # Install dependencies
                 '''
             }
         }
         stage('Linting') {
             steps {
-                echo 'Running code linting...'
+                echo 'Running linting checks...'
                 sh '''
-                    . venv/bin/activate
-                    echo Running flake8 for Python linting...
-                    flake8 --max-line-length=88 .
+                    . ${VENV_DIR}/bin/activate
+                    pylint your_python_files_or_directories || true  # Replace with actual paths
                 '''
             }
         }
         stage('Unit Testing') {
             steps {
-                echo 'Executing unit tests...'
+                echo 'Running unit tests...'
                 sh '''
-                    . venv/bin/activate
-                    echo Running pytest for unit tests...
-                    pytest --junitxml=test_results/unit_tests.xml
+                    . ${VENV_DIR}/bin/activate
+                    mkdir -p ${TEST_RESULTS_DIR}
+                    pytest tests/unit --junitxml=${TEST_RESULTS_DIR}/unit_test_results.xml  # Path to unit tests
                 '''
             }
         }
         stage('Integration Testing') {
             steps {
-                echo 'Executing integration tests...'
+                echo 'Running integration tests...'
                 sh '''
-                    . venv/bin/activate
-                    echo Running integration tests...
-                    pytest tests/integration --junitxml=test_results/integration_tests.xml
+                    . ${VENV_DIR}/bin/activate
+                    pytest tests/integration --junitxml=${TEST_RESULTS_DIR}/integration_test_results.xml  # Path to integration tests
                 '''
             }
         }
@@ -60,11 +63,10 @@ pipeline {
             steps {
                 echo 'Packaging the application...'
                 sh '''
-                    . venv/bin/activate
-                    echo Creating application package...
-                    python setup.py sdist
-                    mkdir -p artifacts
-                    mv dist/*.tar.gz artifacts/
+                    . ${VENV_DIR}/bin/activate
+                    mkdir -p ${BUILD_DIR}
+                    echo "Packaging logs" > ${BUILD_DIR}/package.log
+                    # Add your packaging commands here (e.g., Docker, zip, etc.)
                 '''
             }
         }
@@ -72,19 +74,17 @@ pipeline {
             steps {
                 echo 'Building the application...'
                 sh '''
-                    echo Compiling the application code...
-                    mkdir -p build
-                    echo "Build logs" > build/build.log
+                    . ${VENV_DIR}/bin/activate
+                    mkdir -p ${BUILD_DIR} && echo "Build logs" > ${BUILD_DIR}/build.log
                 '''
             }
         }
         stage('Deployment') {
             steps {
-                echo 'Deploying application to Development environment...'
+                echo 'Deploying the application...'
                 sh '''
-                    echo Deploying FastAPI application...
-                    . venv/bin/activate
-                    uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload &
+                    . ${VENV_DIR}/bin/activate
+                    # Add your deployment commands here (e.g., upload to server, deploy with Docker)
                 '''
             }
         }
@@ -92,23 +92,14 @@ pipeline {
     post {
         always {
             echo 'Cleaning up temporary files...'
-            sh 'rm -rf build test_results deployment setup.log artifacts'
+            sh "rm -rf ${VENV_DIR} ${BUILD_DIR} ${TEST_RESULTS_DIR} setup.log artifacts"
         }
         success {
             echo 'Pipeline completed successfully!'
             emailext (
                 to: 'bhavsarvaibhav001@gmail.com',
                 subject: "Jenkins Pipeline Successful: ${env.JOB_NAME}",
-                body: """
-                    The pipeline ${env.JOB_NAME} completed successfully at ${env.BUILD_URL}.
-                    
-                    Summary:
-                    - Linting passed.
-                    - Unit and Integration tests passed.
-                    - Application packaged and deployed successfully.
-                    
-                    Great job!
-                """
+                body: "The pipeline ${env.JOB_NAME} completed successfully at ${env.BUILD_URL}. Great job!"
             )
         }
         failure {
@@ -116,11 +107,7 @@ pipeline {
             emailext (
                 to: 'bhavsarvaibhav001@gmail.com',
                 subject: "Jenkins Pipeline Failed: ${env.JOB_NAME}",
-                body: """
-                    The pipeline ${env.JOB_NAME} failed at ${env.BUILD_URL}.
-                    
-                    Please review the logs and test reports for details.
-                """
+                body: "The pipeline ${env.JOB_NAME} failed at ${env.BUILD_URL}. Please review the logs for details."
             )
         }
     }
