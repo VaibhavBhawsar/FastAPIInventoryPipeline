@@ -38,6 +38,14 @@ pipeline {
             echo 'Cleaning up temporary files...'
             sh 'rm -rf build test_results deployment setup.log'
         }
+        success {
+            echo 'Pipeline completed successfully!'
+            emailext (
+                to: 'bhavsarvaibhav001@gmail.com',
+                subject: "Jenkins Pipeline Successful: ${env.JOB_NAME}",
+                body: "The pipeline ${env.JOB_NAME} completed successfully at ${env.BUILD_URL}. Great job!"
+            )
+        }
         failure {
             echo 'Pipeline failed. Please check the logs.'
             emailext (
