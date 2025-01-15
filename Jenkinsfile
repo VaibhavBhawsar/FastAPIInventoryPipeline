@@ -63,28 +63,24 @@ pipeline {
         stage('Integration Testing') {
             steps {
                 echo "Running integration tests..."
-                // Add integration test commands here
             }
         }
 
         stage('Package Application') {
             steps {
                 echo "Packaging the application..."
-                // Add packaging commands here
             }
         }
 
         stage('Build') {
             steps {
                 echo "Building the application..."
-                // Add build commands here
             }
         }
 
         stage('Deployment') {
             steps {
                 echo "Deploying the application..."
-                // Add deployment commands here
             }
         }
 
